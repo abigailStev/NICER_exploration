@@ -1,7 +1,6 @@
 # NICER_exploration
 
-Abigail Stevens, abigailstev@gmail.com, copyright 2018-2021
-Licensed with an MIT license
+Abigail Stevens, abigailstev@gmail.com, copyright 2018-2021. Licensed with an MIT license.
 
 ## Order of operations
 ### 1. query_dl_nicer.ipynb
@@ -28,6 +27,7 @@ Makes dynamical power spectra.
 
 Takes the output from step 5 and just tweaks the plot, so that you can edit your axis limits without needing to recompute the dynamical power spectra all over again.
 
+Use tools from Stingray Software (https://docs.stingray.science/) for detailed analysis!
 
 ## Other stuff
 ### ci_bins.ipynb
@@ -38,7 +38,3 @@ Makes plots of photon count and hardness vs days from MAXI data (need to downloa
 
 ### xcor_tools_nicer.py
 Helper classes and methods that are imported and used in all of the above software.
-
-
-## Depreciated
-Use tools from Stingray Software instead of these old programs: lag-energy.ipynb, lag-frequency.ipynb, power_and_cross.py, rms-energy_spectra.ipynb
