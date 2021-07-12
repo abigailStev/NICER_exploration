@@ -115,9 +115,10 @@ def per_file(out_file, obj_name, in_file, gti_file, n_seg, n_bins, dt, df,
     x_fe
     :return:
     """
+    print(out_file)
     if not os.path.isdir(os.path.dirname(out_file)):
         print(os.path.dirname(out_file))
-        os.mkdir(os.path.dirname(out_file))
+        os.makedirs(os.path.dirname(out_file))
 
     with open(out_file, 'w') as f:
         f.write("# OBJECT = %s\n" % obj_name)
@@ -388,13 +389,12 @@ if __name__ == "__main__":
     ## SET UP
     ##########
 
-    obj_name = "GX_339-4"
-    obj_prefix = "gx339-2021"
+    obj_name = "Swift_J1728.9-3613"
+    obj_prefix = "SwiftJ1728"
 
     homedir = os.path.expanduser("~")
-    exe_dir = homedir + "/Documents/Research/NICER_exploration"
-    data_dir = homedir + "/Reduced_data/%s" % obj_name
-    n_seconds = int(32)  # length of light curve segment, in seconds
+    data_dir = "%s/Reduced_data/%s" % (homedir, obj_name)
+    n_seconds = int(16)  # length of light curve segment, in seconds
     dt = 1./128.  # length of time bin, in seconds
     # debug = True
     debug = False
@@ -409,27 +409,30 @@ if __name__ == "__main__":
     rms_lf = 1.  # Hz
     rms_hf = 15.  # Hz
 
-    out_list_file = exe_dir + "/out/%s/%s_seg-info-list.txt" % (obj_name,
-                                                                obj_prefix)
+    # obj_dir = "%s/Documents/Research/NICER_exploration" % (homedir)
+    # out_list_file = "%s/out/%s/%s_seg-info-list.txt" % (obj_dir, obj_name,
+    #                                                             obj_prefix)
+    obj_dir = "%s/Documents/Research/%s" % (homedir, obj_prefix)
+    out_list_file = "%s/out/%s_seg-info-list.txt" % (obj_dir, obj_prefix)
 
     ## Need to have already made this file with the list of local filenames
     ## in data_dir
-    input_list = exe_dir + "/in/%s_evtlists.txt" % obj_prefix
+    input_list = "%s/in/%s_evtlists.txt" % (obj_dir, obj_prefix)
     ## Need to have already made this file in make_GTIs.ipynb
-    gti_list = exe_dir + "/in/%s_32sGTIlists.txt" % obj_prefix
+    gti_list = "%s/in/%s_16sGTIlists.txt" % (obj_dir, obj_prefix)
 
 
     ###########################################################################
     ###########################################################################
 
     if debug:
-        out_file_base = exe_dir + "/out/%s/debug_%s_seg-info" % (obj_name,
+        out_file_base = "%s/out/%s/debug_%s_seg-info" % (obj_dir, obj_name,
                                                                 obj_prefix)
     else:
-        out_file_base = exe_dir + "/out/%s/%s_seg-info" % (obj_name,
+        out_file_base = "%s/out/%s/%s_seg-info" % (obj_dir, obj_name,
                                                            obj_prefix)
 
-    # rsp_matrix_file = exe_dir + "/nicer_v1.02rbn-2.rsp"
+    # rsp_matrix_file = obj_dir + "/nicer_v1.02rbn-2.rsp"
     # rsp_hdu = fits.open(rsp_matrix_file)
     # detchans = np.int(rsp_hdu['EBOUNDS'].header['DETCHANS'])
 
@@ -481,18 +484,22 @@ if __name__ == "__main__":
     ## Looping through the data files to read the light curves
     for (in_file,gti_file)in zip(data_files, gti_files):
         if in_file[0] == '.':
-            in_file = exe_dir + in_file[1:]
-            gti_file = exe_dir + gti_file[1:]
+            in_file = obj_dir + in_file[1:]
+            gti_file = obj_dir + gti_file[1:]
 
         else:
             in_file = data_dir + "/" + in_file
             gti_file = data_dir + "/" + gti_file
         print("\nInput file %d/%d: %s" % (n_files, len(data_files), in_file))
-        end_num = in_file.split('/')[-1].split('.')[0].split('-')[-1]
-        try:
-            filenum = int(end_num)
-        except TypeError or ValueError:
-            filenum = n_files
+        if "ni" in os.path.basename(in_file):
+            filenum = os.path.basename(in_file).split('_')[0][-3:]
+        else:
+            end_num = in_file.split('/')[-1].split('.')[0].split('-')[-1]
+            try:
+                filenum = int(end_num)
+            except TypeError or ValueError:
+                filenum = n_files
+        print(filenum)
         out_file = out_file_base + "-"+str(filenum)+".dat"
         # print("Is file: ", os.path.isfile(out_file))
         # print("Overwrite: ", overwrite)
