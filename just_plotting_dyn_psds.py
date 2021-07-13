@@ -2,6 +2,7 @@ import numpy as np
 from astropy.table import Table
 from astropy.time import Time
 import subprocess
+import os
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 from matplotlib.ticker import MultipleLocator, FixedLocator
@@ -43,17 +44,41 @@ def find_nearest(array, value):
 
 if __name__ == "__main__":
 
-    filename = "./out/GX_339-4/gx339-2021_32sec_64dt_dynpsd_rb"
+    homedir = os.path.expanduser("~")
+    obj_name = "Swift_J1728.9-3613"
+    obj_prefix = "SwiftJ1728"
+    # obj_dir = "%s/Documents/Research/NICER_exploration" % (homedir)
+    obj_dir = "%s/Documents/Research/%s" % (homedir, obj_prefix)
+    filename = "%s/out/%s_32sec_64dt_dynpsd" % (obj_dir, obj_prefix)
+    input_list = "%s-tab.txt" % filename
 
-    dyn_psd = Table.read(filename+".fits")
-    print(dyn_psd.info)
+    ## Input_file is a list of eventlists, so get each of those files
+    table_files = [line.strip() for line in open(input_list)]
+    file_segs = []
+    if not table_files:  ## If data_files is an empty list
+        raise Exception("ERROR: No files in the list of dynpsd tables: %s"
+                        % input_list)
+    dyn_psd = Table.read(table_files[0])
+    file_segs.append(np.shape(dyn_psd['PSD'])[1])
+    # print(dyn_psd.info)
+    if len(table_files) > 1:
+        dyn_arr = np.asarray(dyn_psd['PSD'])
+        for tabfile in table_files[1:]:
+            temp = Table.read(tabfile)
+            dyn_arr = np.append(dyn_arr, np.asarray(temp['PSD']), axis=1)
+            file_segs.append(np.shape(dyn_arr)[1])
+        dyn_psd['PSD'] = dyn_arr
+        dyn_psd.meta['N_SEG'] = np.shape(dyn_arr)[1]
+
+    # print(dyn_psd.info)
+
     lf, lf_idx = find_nearest(dyn_psd['FREQUENCY'], 0.1)
     uf, uf_idx = find_nearest(dyn_psd['FREQUENCY'], 20)
-    ls = 0
-    # us = 120
     v_min = 1E-3
-    v_max = 5E-1
-    us = dyn_psd.meta['N_SEG']
+    v_max = 1E-1
+    ls = 0
+    # us = dyn_psd.meta['N_SEG']
+    us = 200
     seg_num = np.arange(0, dyn_psd.meta['N_SEG']+1, dtype=int)
 
     #######################################################
@@ -81,10 +106,16 @@ if __name__ == "__main__":
     ax.set_yscale('log')
     ax.set_xlabel(r'Elapsed time ($\times$ %d s)' % dyn_psd.meta['N_SEC'],
                   fontproperties=font_prop)
+    for file_sep in file_segs:
+        ax.axvline(file_sep, c='black', lw=1)
 
     ## Setting the axes' minor ticks. It's complicated.
-    ax.xaxis.set_minor_locator(MultipleLocator(100))
-    ax.set_xticks(np.arange(ls, us, 500))
+    # ax.xaxis.set_minor_locator(MultipleLocator(200))
+    # ax.set_xticks(np.arange(ls, us, 1000))
+    ax.set_xticks(np.arange(ls, us, 50))
+    ax.xaxis.set_minor_locator(MultipleLocator(10))
+
+
     ## Y ticks
     y_maj_loc = [0.1, 1, 10, 20]
     y_maj_labels = ["0.1", "1", "10", "20"]
